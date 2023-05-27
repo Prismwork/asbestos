@@ -12,7 +12,6 @@ repositories {
     mavenCentral()
     maven("https://maven.fabricmc.net") { name = "Fabric" } // mapping-io
     maven("https://maven.quiltmc.org/repository/snapshot") { name = "Quilt" } // quilt loom
-    maven("https://maven.minecraftforge.net/") { name = "Forge" } // artifactural
 }
 
 dependencies {
@@ -21,8 +20,6 @@ dependencies {
     compileOnly("org.quiltmc:loom:${property("loom_version")}-SNAPSHOT")
 
     implementation("com.google.guava:guava:31.1-jre")
-    implementation("net.minecraftforge:artifactural:3.0.10")
-    implementation("net.minecraftforge:unsafe:0.2.0")
     implementation("net.fabricmc:mapping-io:0.2.1")
 }
 
