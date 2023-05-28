@@ -46,8 +46,13 @@ class MappingsBuilder(private val project: Project) {
     fun build(): Dependency {
         val loom = project.loom
 
+        val out = project.asbestos.getCacheDir().resolve("asbestos-mappings.tiny")
+
         // If the base mappings are null, return an empty set of mappings
         if (baseMappingsDep == null) return loom.layered {}
+
+        // If a mapping file is presented, use that one instead
+        if (out.toFile().exists()) return loom.layered { it.mappings(out) }
 
         val stopwatch = Stopwatch.createStarted()
         project.logger.lifecycle("[Asbestos] Building mappings...")
@@ -135,14 +140,10 @@ class MappingsBuilder(private val project: Project) {
         if (!project.asbestos.getCacheDir().toFile().exists())
             project.asbestos.getCacheDir().toFile().mkdirs()
 
-        val out = project.asbestos.getCacheDir().resolve("asbestos-mappings.tiny")
-
         Tiny2Writer(Files.newBufferedWriter(out, StandardCharsets.UTF_8), false)
             .use(outputMappings::accept)
 
-        return loom.layered {
-            it.mappings(out)
-        }
+        return loom.layered { it.mappings(out) }
     }
 
     private companion object {
