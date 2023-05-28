@@ -52,7 +52,7 @@ class MappingsBuilder(private val project: Project) {
         val stopwatch = Stopwatch.createStarted()
         project.logger.lifecycle("[Asbestos] Building mappings...")
 
-        val outputMappings = MemoryMappingTree()
+        val targetMappings = MemoryMappingTree()
 
         // original intermediary -> named
         val baseMappings = getMappings(
@@ -60,10 +60,11 @@ class MappingsBuilder(private val project: Project) {
                 baseMappingsDep?.let { project.dependencies.module(it) }).resolve()
             )
         )
-        baseMappings.accept(MappingSourceNsSwitch(outputMappings, MappingsNamespace.INTERMEDIARY.toString()))
+        baseMappings.accept(MappingSourceNsSwitch(targetMappings, MappingsNamespace.INTERMEDIARY.toString()))
 
         // official -> original intermediary, if source intermediary mappings are presented
         sourceIntermediaryDep?.let { source ->
+            project.logger.lifecycle("[Asbestos] Source intermediary found")
             val sourceIntermediary = getMappings(
                 Iterables.getOnlyElement(
                     project.configurations.detachedConfiguration(
@@ -73,15 +74,20 @@ class MappingsBuilder(private val project: Project) {
             )
 
             // attach official to output
+            /*
+            val nsSwitch = MappingSourceNsSwitch(outputMappings, MappingsNamespace.OFFICIAL.toString())
             val nsCompleter = MappingNsCompleter(
-                outputMappings,
-                mapOf(Pair(MappingsNamespace.OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString()))
+                nsSwitch,
+                mapOf(Pair(MappingsNamespace.INTERMEDIARY.toString(), MappingsNamespace.OFFICIAL.toString())),
+                true
             )
-            val nsSwitch = MappingSourceNsSwitch(nsCompleter, MappingsNamespace.OFFICIAL.toString())
-            sourceIntermediary.accept(nsSwitch)
+            */
+            sourceIntermediary.accept(MappingSourceNsSwitch(targetMappings, MappingsNamespace.INTERMEDIARY.toString()))
 
             // official -> intermediary (target), if possible
             targetIntermediaryDep?.let { target ->
+                project.logger.lifecycle("[Asbestos] Retargeting mappings...")
+
                 val targetIntermediary: MemoryMappingTree = getMappings(
                     Iterables.getOnlyElement(
                         project.configurations.detachedConfiguration(
@@ -91,8 +97,12 @@ class MappingsBuilder(private val project: Project) {
                 )
 
                 // rename the old intermediary to original_intermediary & attach to output
+                val nsSwitchComplete = MappingSourceNsSwitch(
+                    targetMappings,
+                    MappingsNamespace.INTERMEDIARY.toString()
+                )
                 val nsRenamer2 = MappingNsRenamer(
-                    outputMappings,
+                    nsSwitchComplete,
                     mapOf(
                         Pair(MappingsNamespace.INTERMEDIARY.toString(), ORIGINAL_INTERMEIDARY_NAMESPACE),
                         Pair(ORIGINAL_INTERMEIDARY_NAMESPACE, MappingsNamespace.INTERMEDIARY.toString())
@@ -100,15 +110,23 @@ class MappingsBuilder(private val project: Project) {
                 )
                 val nsCompleterTarget = MappingNsCompleter(
                     nsRenamer2,
-                    mapOf(Pair(MappingsNamespace.OFFICIAL.toString(), ORIGINAL_INTERMEIDARY_NAMESPACE))
+                    mapOf(Pair(MappingsNamespace.OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString())),
+                    true
                 )
                 val nsRenamer1 = MappingNsRenamer(
                     nsCompleterTarget,
                     mapOf(Pair(MappingsNamespace.INTERMEDIARY.toString(), ORIGINAL_INTERMEIDARY_NAMESPACE))
                 )
                 targetIntermediary.accept(nsRenamer1)
+
+                project.logger.lifecycle("[Asbestos] Mappings retargeted")
             }
+
+            project.logger.lifecycle("[Asbestos] Merged mappings")
         }
+
+        val outputMappings = MemoryMappingTree()
+        targetMappings.accept(MappingSourceNsSwitch(outputMappings, MappingsNamespace.OFFICIAL.toString()))
 
         inheritMappedNamesOfEnclosingClasses(outputMappings)
 

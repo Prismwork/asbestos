@@ -15,7 +15,7 @@ val Project.asbestos: AsbestosGradleExtension
 val Project.loom: LoomGradleExtension
     get() = LoomGradleExtension.get(project)
 
-class AsbestosGradleExtension(private val project: Project) {
+open class AsbestosGradleExtension(private val project: Project) {
     fun newMappingsBuilder(): MappingsBuilder {
         return MappingsBuilder(project)
     }
