@@ -6,7 +6,9 @@ plugins {
 
 val archivesBaseName = "asbestos"
 group = "io.github.prismwork"
-version = "1.0.0"
+val majorVersion = "1.0"
+val minorVersion = "0"
+version = "$majorVersion.$minorVersion"
 
 repositories {
     mavenCentral()
@@ -53,5 +55,25 @@ publishing {
 
     repositories {
         mavenLocal()
+        if (System.getenv("MAVEN_USERNAME") != null && System.getenv("MAVEN_PASSWORD") != null) {
+            maven("https://maven.nova-committee.cn/releases") {
+                name = "release"
+
+                credentials {
+                    username = System.getenv("MAVEN_USERNAME")
+                    password = System.getenv("MAVEN_PASSWORD")
+                }
+            }
+
+            maven("https://maven.nova-committee.cn/snapshots") {
+                name = "snapshot"
+                version = "$majorVersion-SNAPSHOT"
+
+                credentials {
+                    username = System.getenv("MAVEN_USERNAME")
+                    password = System.getenv("MAVEN_PASSWORD")
+                }
+            }
+        }
     }
 }
