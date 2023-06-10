@@ -6,7 +6,7 @@ plugins {
 
 val archivesBaseName = "asbestos"
 group = "io.github.prismwork"
-val majorVersion = "1.0"
+val majorVersion = "0.1"
 val minorVersion = "0"
 version = "$majorVersion.$minorVersion"
 
@@ -23,6 +23,8 @@ dependencies {
 
     implementation("com.google.guava:guava:31.1-jre")
     implementation("net.fabricmc:mapping-io:0.2.1")
+    implementation("net.fabricmc:tiny-remapper:0.8.6")
+    implementation("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
 }
 
 kotlin {

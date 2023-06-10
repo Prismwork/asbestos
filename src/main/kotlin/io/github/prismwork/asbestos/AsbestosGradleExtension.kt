@@ -17,6 +17,7 @@ val Project.loom: LoomGradleExtension
 
 open class AsbestosGradleExtension(private val project: Project) {
     fun newMappingsBuilder(): MappingsBuilder {
+        project.loom
         return MappingsBuilder(project)
     }
 
